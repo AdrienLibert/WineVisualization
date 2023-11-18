@@ -1,10 +1,54 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta charset="UTF-8">
+    <title>Visualisation de Données</title>
+    <script type="text/javascript" src="js/d3.v7.min.js"></script>
+    <script type="text/javascript" src="data/data.js"></script>
+    <script type="text/javascript" src="js/scatterplot.js" defer></script>
+    <script type="text/javascript" src="js/parallel_coordinate.js" defer></script>
+    <script type="text/javascript" src="js/hist.js" defer></script>    
+    <!-- <link rel="stylesheet" href="style.css"> -->
 </head>
 <body>
     <a href="index.html">Accueil</a>
-    <a href="hist.html">Histogramme</a>
+    <div id="scatterplot"></div>
+    <div id="parallelCoordinates"></div>
+    <div>
+        <label for="dataVariable">Choisir la variable :</label>
+        <select id="dataVariable">
+            <option value="fixed acidity">Acidité fixe</option>
+            <option value="volatile acidity">Acidité volatile</option>
+            <option value="citric acid">Acide citrique</option>
+            <option value="residual sugar">Sucre résiduel</option>
+            <option value="chlorides">Chlorures</option>
+            <option value="free sulfur dioxide">Dioxyde de soufre libre</option>
+            <option value="total sulfur dioxide">Dioxyde de soufre total</option>
+            <option value="density">Densité</option>
+            <option value="pH">pH</option>
+            <option value="sulphates">Sulfates</option>
+            <option value="alcohol">Alcool</option>
+            <option value="quality">Qualité</option>
+        </select>
     </div>
+    
+    <div>
+        <label for="columnSizeInput">Taille des Colonnes :</label>
+        <input type="range" id="columnSizeInput" min="0.1" max="10" step="0.1" value="1">
+        <input type="number" id="columnSizeNumber" min="0.1" max="10" step="0.1" value="1">
+        
+    </div>
+
+    <div>
+        <label for="regressionCurveInput">Courbe de Régression :</label>
+        <input type="range" id="regressionCurveInput" min="1" max="10" value="1">
+        <input type="number" id="regressionCurveNumber" min="1" max="10" value="1">
+    </div>
+
+    <div id="histogram">
+        <!-- L'histogramme et la courbe de densité seront générés ici -->
+    </div>
+
+    <!-- Ajoutez ici d'autres éléments HTML si nécessaire -->
 </body>
 </html>
