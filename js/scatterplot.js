@@ -1,57 +1,12 @@
+let selectedData = [];
+let allCircles;  // Déclaration au niveau du script
+
 function createScatterplot(data) {
     const width_scat = 2000;
     const height_scat = width_scat;
     const padding = 40;
     const columns = Object.keys(data[0]).filter(d => typeof data[0][d] === "number");
     const size = (width_scat - (columns.length + 1) * padding) / columns.length + padding;
-
-    function brush(cell, circle, svg, {padding, size, x, y, columns}) {
-        const brush = d3.brush()
-            .extent([[padding / 2, padding / 2], [size - padding / 2, size - padding / 2]])
-            .on("start", brushstarted)
-            .on("brush", brushed)
-            .on("end", brushended);
-
-        cell.call(brush);
-
-        let brushCell;
-
-        // Clear the previously-active brush, if any.
-        function brushstarted() {
-        if (brushCell !== this) {
-        d3.select(brushCell).call(brush.move, null);
-        brushCell = this;
-        }
-        }
-
-        // Highlight the selected circles.
-        function brushed({selection}, [i, j]) {
-        let selected = [];
-        if (selection) {
-        const [[x0, y0], [x1, y1]] = selection; 
-        circle.classed("hidden",
-            d => x0 > x[i](d[columns[i]])
-            || x1 < x[i](d[columns[i]])
-            || y0 > y[j](d[columns[j]])
-            || y1 < y[j](d[columns[j]]));
-        selected = data.filter(
-            d => x0 < x[i](d[columns[i]])
-            && x1 > x[i](d[columns[i]])
-            && y0 < y[j](d[columns[j]])
-            && y1 > y[j](d[columns[j]]));
-        }
-        svg.property("value", selected).dispatch("input");
-        }
-
-        // If the brush is empty, select all circles.
-        function brushended({selection}) {
-        if (selection) return;
-        svg.property("value", []).dispatch("input");
-        circle.classed("hidden", false);
-        }
-    }
-
-
 
     // Define the horizontal scales (one for each row).
     const x = columns.map(c => d3.scaleLinear()
@@ -100,9 +55,9 @@ function createScatterplot(data) {
         .selectAll("g")
         .data(d3.cross(d3.range(columns.length), d3.range(columns.length)))
         .join("g")
-        .filter(([i, j]) => j >= i) // Filtrer pour n'avoir que le triangle inférieur
+        .filter(([i, j]) => j >= i)
         .attr("transform", ([i, j]) => `translate(${i * size},${j * size})`);
-    
+
     cell.append("rect")
         .attr("fill", "none")
         .attr("stroke", "#aaa")
@@ -110,7 +65,7 @@ function createScatterplot(data) {
         .attr("y", padding / 2 + 0.5)
         .attr("width", size - padding)
         .attr("height", size - padding);
-    
+
     cell.each(function([i, j]) {
         d3.select(this).selectAll("circle")
             .data(data.filter(d => !isNaN(d[columns[i]]) && !isNaN(d[columns[j]])))
@@ -122,9 +77,9 @@ function createScatterplot(data) {
             .attr("fill", "#69b3a2");
     });
 
-    let allCircles = svg.selectAll("circle");
+    // Assignation après la création des cercles
+    allCircles = svg.selectAll("circle");
 
-    // Ignore this line if you don't need the brushing behavior.
     cell.call(brush, allCircles, svg, {padding, size, x, y, columns});
 
     svg.append("g")
@@ -139,14 +94,67 @@ function createScatterplot(data) {
         .attr("dy", ".71em")
         .text(d => d);
 
-    svg.property("value", [])
-
-
-
-
+    svg.property("value", []);
     // Au lieu de document.body.appendChild(svg.node());
     document.getElementById('scatterplot').appendChild(svg.node());
 }
 
-// Appeler la fonction avec les données
+function brush(cell, circle, svg, {padding, size, x, y, columns}) {
+    const brush = d3.brush()
+        .extent([[padding / 2, padding / 2], [size - padding / 2, size - padding / 2]])
+        .on("start", brushstarted)
+        .on("brush", brushed)
+        .on("end", brushended);
+
+    cell.call(brush);
+    let brushCell;
+
+    function brushstarted() {
+        if (brushCell !== this) {
+            d3.select(brushCell).call(brush.move, null);
+            brushCell = this;
+        }
+    }
+
+    function brushed({selection}, [i, j]) {
+        if (selection) {
+            const [[x0, y0], [x1, y1]] = selection;
+            selectedData = data.filter(
+                d => x0 <= x[i](d[columns[i]]) && x1 >= x[i](d[columns[i]]) &&
+                     y0 <= y[j](d[columns[j]]) && y1 >= y[j](d[columns[j]])
+            );
+            circle.classed("hidden", d => !selectedData.includes(d));
+            // Mettre à jour le parallel coordinates plot
+            updateParallelFromScatter(selectedData);
+            const event = new CustomEvent('scatterSelectionChanged', { detail: selectedData });
+            document.dispatchEvent(event);
+        } else {
+            selectedData = [];
+            circle.classed("hidden", false);
+            // Mettre à jour le parallel coordinates plot
+            updateParallelFromScatter([]);
+            const event = new CustomEvent('scatterSelectionChanged', { detail: [] });
+            document.dispatchEvent(event);
+
+        }
+        svg.property("value", selectedData).dispatch("input");
+    }
+    
+
+    function brushended({selection}) {
+        if (!selection) {
+            circle.classed("hidden", false);
+            // Update parallel coordinates plot here if necessary
+            // updateParallelFromScatter([]);
+        }
+    }
+}
+
+// Function to update scatter plot based on parallel coordinates selection
+function updateScatterFromParallel(selectedPoints) {
+    selectedData = selectedPoints;
+    allCircles.classed("hidden", d => !selectedData.includes(d));
+}
+
+// Call the function with the data
 createScatterplot(data);
