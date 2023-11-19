@@ -1,5 +1,5 @@
 let selectedData = [];
-let allCircles;  // Déclaration au niveau du script
+let allCircles;
 
 function createScatterplot(data) {
     const width_scat = 2000;
@@ -144,17 +144,13 @@ function brush(cell, circle, svg, {padding, size, x, y, columns}) {
     function brushended({selection}) {
         if (!selection) {
             circle.classed("hidden", false);
-            // Update parallel coordinates plot here if necessary
-            // updateParallelFromScatter([]);
         }
     }
 }
 
-// Function to update scatter plot based on parallel coordinates selection
 function updateScatterFromParallel(selectedPoints) {
     selectedData = selectedPoints;
     allCircles.classed("hidden", d => !selectedData.includes(d));
 }
 
-// Call the function with the data
 createScatterplot(data);
